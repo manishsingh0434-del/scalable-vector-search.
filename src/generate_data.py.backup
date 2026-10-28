@@ -1,0 +1,126 @@
+
+import argparse
+import random
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DATA_DIR = PROJECT_ROOT / "data"
+
+TOPICS = [
+    (
+        "Python",
+        "Python supports backend development, automation, data processing, "
+        "and machine learning. Developers use functions, modules, testing, "
+        "and virtual environments to maintain reliable applications."
+    ),
+    (
+        "Docker",
+        "Docker packages applications and dependencies into containers. "
+        "Images provide repeatable builds, while container configuration "
+        "helps applications run consistently across environments."
+    ),
+    (
+        "Kubernetes",
+        "Kubernetes orchestrates containers across a cluster. Deployments, "
+        "services, health checks, and scaling policies help maintain "
+        "reliable application workloads."
+    ),
+    (
+        "Vector Search",
+        "Vector search represents text as numerical embeddings and retrieves "
+        "semantically similar content. Retrieval quality depends on chunking, "
+        "embedding models, indexing configuration, and evaluation."
+    ),
+    (
+        "Batch Processing",
+        "Batch processing handles records in manageable groups. Small batches "
+        "can reduce peak memory use, improve recovery, and make large data "
+        "ingestion jobs easier to monitor."
+    ),
+    (
+        "Observability",
+        "Observability uses logs, metrics, and traces to understand system "
+        "behavior. Latency, error rates, memory consumption, and disk usage "
+        "help engineers identify performance problems."
+    ),
+    (
+        "Linux",
+        "Linux provides processes, files, permissions, networking, and system "
+        "monitoring tools. Administrators use shell commands to automate "
+        "tasks and diagnose operational issues."
+    ),
+    (
+        "Databases",
+        "Databases persist application data and provide retrieval mechanisms. "
+        "Indexes, storage layout, query patterns, and maintenance affect "
+        "performance as datasets grow."
+    ),
+]
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Generate a local synthetic text corpus."
+    )
+    parser.add_argument(
+        "--documents",
+        type=int,
+        default=1000,
+        help="Number of text documents to generate (default: 1000).",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Random seed for reproducible output.",
+    )
+    parser.add_argument(
+        "--replace",
+        action="store_true",
+        help="Replace only previously generated synthetic documents.",
+    )
+    args = parser.parse_args()
+
+    if args.documents < 1:
+        parser.error("--documents must be at least 1")
+
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    rng = random.Random(args.seed)
+
+    if args.replace:
+        for old_file in DATA_DIR.glob("synthetic_*.txt"):
+            old_file.unlink()
+
+    for index in range(args.documents):
+        topic, explanation = rng.choice(TOPICS)
+        variation = rng.choice([
+            "The team should validate the results before deployment.",
+            "A repeatable workflow makes failures easier to investigate.",
+            "Performance should be measured under realistic workloads.",
+            "Incremental processing helps control resource consumption.",
+            "Clear documentation makes maintenance easier for engineers.",
+        ])
+
+        content = (
+            f"Document ID: {index:06d}\n\n"
+            f"Topic: {topic}\n\n"
+            f"{explanation}\n\n"
+            f"Operational note: {variation}\n\n"
+            f"Record number {index:06d} belongs to the {topic} knowledge "
+            f"collection. Its purpose is to support local semantic search "
+            f"experiments and retrieval benchmarking."
+        )
+
+        output = DATA_DIR / f"synthetic_{index:06d}.txt"
+        output.write_text(content + "\n", encoding="utf-8")
+
+        if (index + 1) % 1000 == 0:
+            print(f"Generated {index + 1} documents")
+
+    print("\nGeneration complete.")
+    print(f"Documents generated: {args.documents}")
+    print(f"Output directory: {DATA_DIR}")
+
+
+if __name__ == "__main__":
+    main()

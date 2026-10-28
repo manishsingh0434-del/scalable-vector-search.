@@ -1,0 +1,36 @@
+cat > .gitignore <<'EOF'
+# Python virtual environment
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Local vector database
+vector_db/
+
+# Model and cache files
+.cache/
+.cache_huggingface/
+*.safetensors
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Editor and operating system files
+.vscode/
+.DS_Store
+
+# Test and coverage files
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+*.log
+EOFdata/synthetic_*.txt
+data/synthetic_*.txt

@@ -1,4 +1,4 @@
-
+import re
 import sys
 import time
 from pathlib import Path
@@ -13,6 +13,17 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DB_DIR = PROJECT_ROOT / "vector_db"
 COLLECTION_NAME = "scalable_documents"
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+
+CANDIDATE_COUNT = 100
+RESULT_COUNT = 3
+
+
+def normalize_for_deduplication(text):
+    """Treat generated load-test copies as the same underlying passage."""
+    text = text.lower()
+    text = re.sub(r"load-test record \d+\.\s*", "", text)
+    text = re.sub(r"\s*synthetic record identifier:\s*\d+\.?", "", text)
+    return " ".join(text.split())
 
 
 def main():
@@ -46,10 +57,9 @@ def main():
             convert_to_numpy=True,
         ).tolist()
 
-        # Retrieve a candidate pool for duplicate removal.
         results = collection.query(
             query_embeddings=query_embedding,
-            n_results=min(100, collection.count()),
+            n_results=min(CANDIDATE_COUNT, collection.count()),
             include=["documents", "metadatas", "distances"],
         )
 
@@ -61,7 +71,7 @@ def main():
             results["metadatas"][0],
             results["distances"][0],
         ):
-            normalized = " ".join(document.lower().split())
+            normalized = normalize_for_deduplication(document)
 
             if normalized in seen_texts:
                 continue
@@ -69,11 +79,11 @@ def main():
             seen_texts.add(normalized)
             unique_results.append((document, metadata, distance))
 
-            if len(unique_results) == 3:
+            if len(unique_results) >= RESULT_COUNT:
                 break
 
         elapsed_ms = (time.perf_counter() - start) * 1000
-        print(f"\nSearch time: {elapsed_ms:.2f} ms")
+        print(f"\nSearch time (embedding + retrieval): {elapsed_ms:.2f} ms")
 
         if not unique_results:
             print("No results found.")
@@ -83,8 +93,11 @@ def main():
             ):
                 print(f"\nResult {rank}")
                 print(f"Source: {metadata.get('source', 'unknown')}")
-                print(f"Distance: {distance:.4f}")
+                print(f"Cosine distance: {distance:.4f}")
                 print(f"Text: {document}")
+
+                if distance > 0.7:
+                    print("Note: This may be a weak match; verify relevance.")
 
         print()
 

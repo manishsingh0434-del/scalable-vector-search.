@@ -1,3 +1,7 @@
 chromadb
 sentence-transformers
-numpy
+pysqlite3-binary
+streamlit
+transformers
+sentencepiece
+torch

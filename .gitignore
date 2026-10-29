@@ -46,3 +46,16 @@ data/uploads/
 # Backups
 *.backup
 *.bak
+
+# Local datasets and uploaded documents
+data/
+vector_db/
+.venv/
+
+# Local AI model caches
+.cache/
+.cache_huggingface/
+
+# Local backups
+*.backup
+*.bak

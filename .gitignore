@@ -34,3 +34,15 @@ htmlcov/
 
 # Generated load-test data
 data/synthetic_*.txt
+
+# Local vector database and user data
+vector_db/
+data/uploads/
+
+# Local model/cache files
+.cache/
+.cache_huggingface/
+
+# Backups
+*.backup
+*.bak
